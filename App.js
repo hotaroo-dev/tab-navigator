@@ -1,56 +1,52 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useState } from 'react'
 import {
   StyleSheet,
   useWindowDimensions,
   Text,
-  Animated,
   SafeAreaView
 } from 'react-native'
+import Animated, {
+  FadeIn,
+  FadeInLeft,
+  FadeOut,
+  FadeOutLeft
+} from 'react-native-reanimated'
 import { MenuContext } from './context'
 import TabNavigator from './tabNavigator'
-
-const transition = {
-  stiffness: 100,
-  damping: 18,
-  useNativeDriver: true
-}
 
 export default function App() {
   const { height } = useWindowDimensions()
   const [openMenu, setOpenMenu] = useState(false)
-  const motionValue = useRef(new Animated.Value(0)).current
-  const translateX = motionValue.interpolate({
-    inputRange: [0, 1],
-    outputRange: [-300, 0]
-  })
-
-  useEffect(() => {
-    if (openMenu) {
-      Animated.spring(motionValue, {
-        toValue: 1,
-        ...transition
-      }).start()
-    } else {
-      Animated.spring(motionValue, {
-        toValue: 0,
-        ...transition
-      }).start()
-    }
-  }, [openMenu])
-
   const toggleMenu = useCallback(() => {
     setOpenMenu(prev => !prev)
   }, [openMenu])
+
+  const visible = openMenu && { backfaceVisibility: 'visible' }
 
   return (
     <MenuContext.Provider value={{ toggleMenu }}>
       <SafeAreaView style={styles.container}>
         <TabNavigator />
-        <Animated.View
-          style={[styles.overlay, { height, transform: [{ translateX }] }]}
-        >
-          <Text style={{ color: '#fff' }}>dropdown</Text>
-        </Animated.View>
+        {openMenu && (
+          <Animated.View
+            entering={FadeIn.stiffness(100).damping(18)}
+            exiting={FadeOut.stiffness(100).damping(18).delay(250)}
+            style={[styles.overlay, { height, opacity: 1 }, visible]}
+            onTouchStart={e => {
+              if (e.target === e.currentTarget) {
+                setOpenMenu(false)
+              }
+            }}
+          >
+            <Animated.View
+              entering={FadeInLeft.stiffness(100).damping(18)}
+              exiting={FadeOutLeft.stiffness(100).damping(18)}
+              style={[styles.menu, { transform: [{ translateX: 0 }] }]}
+            >
+              <Text style={{ color: '#fff' }}>dropdown</Text>
+            </Animated.View>
+          </Animated.View>
+        )}
       </SafeAreaView>
     </MenuContext.Provider>
   )
@@ -62,12 +58,18 @@ const styles = StyleSheet.create({
   },
   overlay: {
     flex: 1,
-    width: 300,
-    transform: [{ translateX: '100%' }],
+    width: '100%',
+    position: 'absolute',
+    backgroundColor: '#000a',
+    opacity: 0,
+    backfaceVisibility: 'hidden',
+    zIndex: 10
+  },
+  menu: {
+    width: 285,
+    height: '100%',
     paddingTop: 80,
     paddingHorizontal: 40,
-    backgroundColor: '#75507B',
-    position: 'absolute',
-    zIndex: 1
+    backgroundColor: '#75507B'
   }
 })

@@ -2,13 +2,11 @@ import { useContext } from 'react'
 import { View, Text, Pressable, StyleSheet } from 'react-native'
 import { MenuContext } from '../context'
 
-export default function Header({ navigation }) {
+export default function Header({ title }) {
   const { toggleMenu } = useContext(MenuContext)
-  const state = navigation.getState()
-
   return (
     <View style={styles.header}>
-      <Text style={styles.heading}>{state.routes[state.index].name}</Text>
+      <Text style={styles.heading}>{title}</Text>
       <Pressable onPress={toggleMenu}>
         <Text>menu</Text>
       </Pressable>
